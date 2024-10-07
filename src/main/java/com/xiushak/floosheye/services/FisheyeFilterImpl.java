@@ -15,7 +15,6 @@ public class FisheyeFilterImpl implements Filter {
         int width = bi.getWidth();
         int height = bi.getHeight();
 
-        System.out.println("Width: " + width + " Height: " + height);
         BufferedImage pbi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         // sets all pixels to black transparent for the background
         for (int j = 0; j < height; j++) {

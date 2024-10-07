@@ -15,7 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
 
 @RestController
 public class FloosheyeController {
@@ -31,7 +30,8 @@ public class FloosheyeController {
      * @return image
      */
     @PostMapping("/fish")
-    public ResponseEntity<byte[]> fish(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Object> fish(@RequestParam("file") MultipartFile file) {
+        System.out.println("Fish called with file: " + file.getOriginalFilename());
         try {
             BufferedImage image = ImageIO.read(file.getInputStream());
             Filter filter = new FisheyeFilterImpl(image);
@@ -40,24 +40,21 @@ public class FloosheyeController {
 
             BufferedImage filteredImage = filter.getImage();
 
-            System.out.println("Image processed: " + filteredImage.getWidth() + "x" + filteredImage.getHeight());
-
             // Convert BufferedImage to byte array
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-            ImageIO.write(filteredImage, "jpg", baos); // You can change "jpg" to "png" as needed
+            ImageIO.write(filteredImage, "png", baos);
 
             byte[] imageBytes = baos.toByteArray();
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.IMAGE_JPEG);
 
-            System.out.println("Image converted to byte array: " + imageBytes.length);
-            System.out.println(Arrays.toString(imageBytes));
+            System.out.println("Fish filter applied to image: " + file.getOriginalFilename());
 
             return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 
@@ -67,8 +64,32 @@ public class FloosheyeController {
      * @return image
      */
     @PostMapping("/brain")
-    public ResponseEntity<byte[]> brain() {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    public ResponseEntity<Object> brain(@RequestParam("file") MultipartFile file) {
+        System.out.println("Brain called with file: " + file.getOriginalFilename());
+        try {
+            BufferedImage image = ImageIO.read(file.getInputStream());
+            Filter filter = new FisheyeFilterImpl(image);
 
+            filter.processImage(image.getWidth() / 2, image.getHeight() / 4);
+
+            BufferedImage filteredImage = filter.getImage();
+
+            // Convert BufferedImage to byte array
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+            ImageIO.write(filteredImage, "png", baos);
+
+            byte[] imageBytes = baos.toByteArray();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_JPEG);
+
+            System.out.println("Brain filter applied to image: " + file.getOriginalFilename());
+
+            return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 }
+
