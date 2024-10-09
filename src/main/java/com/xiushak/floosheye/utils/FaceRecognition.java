@@ -1,0 +1,77 @@
+package com.xiushak.floosheye.utils;
+
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfRect;
+import org.opencv.core.Rect;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.util.ResourceUtils;
+
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Objects;
+
+public class FaceRecognition {
+
+    private static CascadeClassifier faceDetector;
+
+    // Load Haar cascade classifier
+    private static void loadHaarCascade() {
+        try {
+//            File file = ResourceUtils.getFile("classpath:haars/haarcascade_frontalface_default.xml");
+//            faceDetector = new CascadeClassifier(file.getAbsolutePath());
+            Path path = Paths.get(Objects.requireNonNull(FaceRecognition.class.getResource("haars/haarcascade_frontalface_default.xml")).toURI());
+            ;
+
+            System.out.println("Haars file " + path.toAbsolutePath());
+            faceDetector = new CascadeClassifier(path.toAbsolutePath().toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static List<Rect> detectFaces(BufferedImage bi) {
+        if (faceDetector == null) {
+            loadHaarCascade();
+        }
+        // Convert BufferedImage to Mat
+        Mat image = bufferedImageToMat(bi);
+        Mat grayImage = new Mat();
+        Imgproc.cvtColor(image, grayImage, Imgproc.COLOR_BGR2GRAY);
+
+        // Detect faces
+        MatOfRect faceDetections = new MatOfRect();
+        faceDetector.detectMultiScale(grayImage, faceDetections);
+
+        return faceDetections.toList();
+    }
+
+    private static Mat bufferedImageToMat(BufferedImage image) {
+        // Convert BufferedImage to Mat
+        Mat mat = new Mat(image.getHeight(), image.getWidth(), CvType.CV_8UC3);
+        // Copy the pixel data from BufferedImage to Mat
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int rgb = image.getRGB(x, y);
+                // Convert to BGR format
+                mat.put(y, x, new byte[]{
+                        (byte) ((rgb >> 16) & 0xFF),
+                        (byte) ((rgb >> 8) & 0xFF),
+                        (byte) (rgb & 0xFF)
+                });
+            }
+        }
+        return mat;
+    }
+}
