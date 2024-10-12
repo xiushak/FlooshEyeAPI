@@ -6,21 +6,13 @@ import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.ResourceUtils;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Objects;
 
 public class FaceRecognition {
 
@@ -29,13 +21,12 @@ public class FaceRecognition {
     // Load Haar cascade classifier
     private static void loadHaarCascade() {
         try {
+            // these dont work if in a jar
+            Resource resource = new ClassPathResource("haars/haarcascade_frontalface_default.xml");
+            faceDetector = new CascadeClassifier(resource.getFile().getAbsolutePath());
+
 //            File file = ResourceUtils.getFile("classpath:haars/haarcascade_frontalface_default.xml");
 //            faceDetector = new CascadeClassifier(file.getAbsolutePath());
-            Path path = Paths.get(Objects.requireNonNull(FaceRecognition.class.getResource("haars/haarcascade_frontalface_default.xml")).toURI());
-            ;
-
-            System.out.println("Haars file " + path.toAbsolutePath());
-            faceDetector = new CascadeClassifier(path.toAbsolutePath().toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -53,6 +44,8 @@ public class FaceRecognition {
         // Detect faces
         MatOfRect faceDetections = new MatOfRect();
         faceDetector.detectMultiScale(grayImage, faceDetections);
+
+        System.out.println(String.format("Detected %s faces", faceDetections.toArray().length));
 
         return faceDetections.toList();
     }
